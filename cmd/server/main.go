@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"net/http"
 
+	"github.com/ShivamNayak-dev/library-management-system/internal/book"
 	"github.com/ShivamNayak-dev/library-management-system/internal/config"
 	"github.com/ShivamNayak-dev/library-management-system/internal/database"
 )
@@ -15,9 +16,19 @@ func main() {
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
-
 	defer db.Close()
 
-	fmt.Println("Library Management System")
-	fmt.Println("Database connected successfully!")
+	bookRepository := book.NewRepository(db)
+	bookService := book.NewService(bookRepository)
+	bookHandler := book.NewHandler(bookService)
+
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("POST /api/v1/books", bookHandler.CreateBook)
+
+	log.Println("Server running on http://localhost:8080")
+
+	if err := http.ListenAndServe(":8080", mux); err != nil {
+		log.Fatal(err)
+	}
 }
