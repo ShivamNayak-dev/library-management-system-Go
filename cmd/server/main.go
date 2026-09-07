@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/ShivamNayak-dev/library-management-system/internal/config"
 	"github.com/ShivamNayak-dev/library-management-system/internal/database"
 )
 
 func main() {
-	db, err := database.Connect()
+	cfg := config.Load()
+
+	db, err := database.Connect(cfg)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
