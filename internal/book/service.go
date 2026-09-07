@@ -93,3 +93,7 @@ func (s *Service) UpdateBook(
 
 	return book, nil
 }
+
+func (s *Service) DeleteBook(ctx context.Context, id int64) error {
+	return s.repository.Delete(ctx, id)
+}

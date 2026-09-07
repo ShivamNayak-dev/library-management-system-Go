@@ -124,3 +124,26 @@ func (h *Handler) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(book)
 }
+
+func (h *Handler) DeleteBook(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid book ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteBook(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "Book not found", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "Failed to delete book", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

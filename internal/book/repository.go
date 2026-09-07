@@ -212,3 +212,26 @@ func (r *Repository) Update(ctx context.Context, id int64, book *Book) error {
 
 	return r.findByID(ctx, book)
 }
+
+func (r *Repository) Delete(ctx context.Context, id int64) error {
+	query := `
+		DELETE FROM books
+		WHERE id = ?
+	`
+
+	result, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
+}
