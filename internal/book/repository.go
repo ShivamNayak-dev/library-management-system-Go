@@ -325,3 +325,68 @@ func (r *Repository) findAuthorsByBookID(
 
 	return authors, nil
 }
+func (r *Repository) AddCategory(
+	ctx context.Context,
+	bookID int64,
+	categoryID int64,
+) error {
+	query := `
+		INSERT INTO book_categories (
+			book_id,
+			category_id
+		)
+		VALUES (?, ?)
+	`
+
+	_, err := r.db.ExecContext(
+		ctx,
+		query,
+		bookID,
+		categoryID,
+	)
+
+	return err
+}
+
+func (r *Repository) findCategoriesByBookID(
+	ctx context.Context,
+	bookID int64,
+) ([]Category, error) {
+	query := `
+		SELECT
+			c.id,
+			c.name
+		FROM categories c
+		INNER JOIN book_categories bc
+			ON c.id = bc.category_id
+		WHERE bc.book_id = ?
+		ORDER BY c.id
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, bookID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	categories := make([]Category, 0)
+
+	for rows.Next() {
+		var category Category
+
+		if err := rows.Scan(
+			&category.ID,
+			&category.Name,
+		); err != nil {
+			return nil, err
+		}
+
+		categories = append(categories, category)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}

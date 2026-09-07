@@ -105,3 +105,11 @@ func (s *Service) AddAuthor(
 ) error {
 	return s.repository.AddAuthor(ctx, bookID, authorID)
 }
+
+func (s *Service) AddCategory(
+	ctx context.Context,
+	bookID int64,
+	categoryID int64,
+) error {
+	return s.repository.AddCategory(ctx, bookID, categoryID)
+}

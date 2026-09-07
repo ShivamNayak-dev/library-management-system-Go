@@ -184,3 +184,46 @@ func (h *Handler) AddAuthor(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (r *Repository) findCategoriesByBookID(
+	ctx context.Context,
+	bookID int64,
+) ([]Category, error) {
+	query := `
+		SELECT
+			c.id,
+			c.name
+		FROM categories c
+		INNER JOIN book_categories bc
+			ON c.id = bc.category_id
+		WHERE bc.book_id = ?
+		ORDER BY c.id
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, bookID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	categories := make([]Category, 0)
+
+	for rows.Next() {
+		var category Category
+
+		if err := rows.Scan(
+			&category.ID,
+			&category.Name,
+		); err != nil {
+			return nil, err
+		}
+
+		categories = append(categories, category)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
