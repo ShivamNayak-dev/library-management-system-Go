@@ -7,3 +7,7 @@ type CreateBookRequest struct {
 	PublishedYear  int    `json:"published_year"`
 	TotalCopies    int    `json:"total_copies"`
 }
+
+type AddAuthorRequest struct {
+	AuthorID int64 `json:"author_id"`
+}

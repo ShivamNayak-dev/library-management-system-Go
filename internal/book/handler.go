@@ -147,3 +147,40 @@ func (h *Handler) DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (h *Handler) AddAuthor(w http.ResponseWriter, r *http.Request) {
+	bookIDStr := r.PathValue("id")
+
+	bookID, err := strconv.ParseInt(bookIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid book ID", http.StatusBadRequest)
+		return
+	}
+
+	var request AddAuthorRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if request.AuthorID <= 0 {
+		http.Error(w, "Invalid author ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.service.AddAuthor(
+		r.Context(),
+		bookID,
+		request.AuthorID,
+	); err != nil {
+		http.Error(
+			w,
+			"Failed to add author to book",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

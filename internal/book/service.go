@@ -97,3 +97,11 @@ func (s *Service) UpdateBook(
 func (s *Service) DeleteBook(ctx context.Context, id int64) error {
 	return s.repository.Delete(ctx, id)
 }
+
+func (s *Service) AddAuthor(
+	ctx context.Context,
+	bookID int64,
+	authorID int64,
+) error {
+	return s.repository.AddAuthor(ctx, bookID, authorID)
+}
