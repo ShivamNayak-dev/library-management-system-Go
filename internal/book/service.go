@@ -3,14 +3,30 @@ package book
 import (
 	"context"
 	"errors"
+	"strings"
 )
 
 var (
-	ErrInvalidTitle         = errors.New("title is required")
-	ErrInvalidISBN          = errors.New("ISBN is required")
-	ErrInvalidTotalCopies   = errors.New("total copies must be greater than zero")
-	ErrInvalidPublishedYear = errors.New("published year is invalid")
+	ErrInvalidTitle       = errors.New("title is required")
+	ErrInvalidISBN        = errors.New("ISBN is required")
+	ErrInvalidTotalCopies = errors.New("total copies must be greater than zero")
 )
+
+func validateCreateBookRequest(request CreateBookRequest) error {
+	if strings.TrimSpace(request.Title) == "" {
+		return ErrInvalidTitle
+	}
+
+	if strings.TrimSpace(request.ISBN) == "" {
+		return ErrInvalidISBN
+	}
+
+	if request.TotalCopies <= 0 {
+		return ErrInvalidTotalCopies
+	}
+
+	return nil
+}
 
 type Service struct {
 	repository *Repository
@@ -23,22 +39,14 @@ func NewService(repository *Repository) *Service {
 }
 
 func (s *Service) CreateBook(ctx context.Context, request CreateBookRequest) (*Book, error) {
-	if request.Title == "" {
-		return nil, ErrInvalidTitle
-	}
-
-	if request.ISBN == "" {
-		return nil, ErrInvalidISBN
-	}
-
-	if request.TotalCopies <= 0 {
-		return nil, ErrInvalidTotalCopies
+	if err := validateCreateBookRequest(request); err != nil {
+		return nil, err
 	}
 
 	book := &Book{
-		Title:           request.Title,
-		ISBN:            request.ISBN,
-		Description:     request.Description,
+		Title:           strings.TrimSpace(request.Title),
+		ISBN:            strings.TrimSpace(request.ISBN),
+		Description:     strings.TrimSpace(request.Description),
 		PublishedYear:   request.PublishedYear,
 		TotalCopies:     request.TotalCopies,
 		AvailableCopies: request.TotalCopies,
@@ -49,4 +57,8 @@ func (s *Service) CreateBook(ctx context.Context, request CreateBookRequest) (*B
 	}
 
 	return book, nil
+}
+
+func (s *Service) GetBooks(ctx context.Context) ([]Book, error) {
+	return s.repository.FindAll(ctx)
 }

@@ -25,6 +25,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("POST /api/v1/books", bookHandler.CreateBook)
+	mux.HandleFunc("GET /api/v1/books", bookHandler.GetBooks)
 
 	log.Println("Server running on http://localhost:8080")
 
