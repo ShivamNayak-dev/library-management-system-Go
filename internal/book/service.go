@@ -62,3 +62,34 @@ func (s *Service) CreateBook(ctx context.Context, request CreateBookRequest) (*B
 func (s *Service) GetBooks(ctx context.Context) ([]Book, error) {
 	return s.repository.FindAll(ctx)
 }
+
+func (s *Service) GetBookByID(ctx context.Context, id int64) (*Book, error) {
+	return s.repository.FindByID(ctx, id)
+}
+
+func (s *Service) UpdateBook(
+	ctx context.Context,
+	id int64,
+	request CreateBookRequest,
+) (*Book, error) {
+
+	if err := validateCreateBookRequest(request); err != nil {
+		return nil, err
+	}
+
+	book := &Book{
+		ID:              id,
+		Title:           strings.TrimSpace(request.Title),
+		ISBN:            strings.TrimSpace(request.ISBN),
+		Description:     strings.TrimSpace(request.Description),
+		PublishedYear:   request.PublishedYear,
+		TotalCopies:     request.TotalCopies,
+		AvailableCopies: request.TotalCopies,
+	}
+
+	if err := s.repository.Update(ctx, id, book); err != nil {
+		return nil, err
+	}
+
+	return book, nil
+}

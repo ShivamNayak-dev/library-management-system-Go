@@ -26,6 +26,8 @@ func main() {
 
 	mux.HandleFunc("POST /api/v1/books", bookHandler.CreateBook)
 	mux.HandleFunc("GET /api/v1/books", bookHandler.GetBooks)
+	mux.HandleFunc("GET /api/v1/books/{id}", bookHandler.GetBookByID)
+	mux.HandleFunc("PUT /api/v1/books/{id}", bookHandler.UpdateBook)
 
 	log.Println("Server running on http://localhost:8080")
 

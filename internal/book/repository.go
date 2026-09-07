@@ -131,3 +131,84 @@ func (r *Repository) FindAll(ctx context.Context) ([]Book, error) {
 
 	return books, nil
 }
+
+
+func (r *Repository) FindByID(ctx context.Context, id int64) (*Book, error) {
+	query := `
+		SELECT
+			id,
+			title,
+			isbn,
+			description,
+			published_year,
+			total_copies,
+			available_copies,
+			created_at,
+			updated_at
+		FROM books
+		WHERE id = ?
+	`
+
+	var book Book
+
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&book.ID,
+		&book.Title,
+		&book.ISBN,
+		&book.Description,
+		&book.PublishedYear,
+		&book.TotalCopies,
+		&book.AvailableCopies,
+		&book.CreatedAt,
+		&book.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &book, nil
+}
+
+func (r *Repository) Update(ctx context.Context, id int64, book *Book) error {
+	query := `
+		UPDATE books
+		SET
+			title = ?,
+			isbn = ?,
+			description = ?,
+			published_year = ?,
+			total_copies = ?,
+			available_copies = ?,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`
+
+	result, err := r.db.ExecContext(
+		ctx,
+		query,
+		book.Title,
+		book.ISBN,
+		book.Description,
+		book.PublishedYear,
+		book.TotalCopies,
+		book.AvailableCopies,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	book.ID = id
+
+	return r.findByID(ctx, book)
+}

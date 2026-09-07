@@ -1,9 +1,11 @@
 package book
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 )
 
 type Handler struct {
@@ -55,4 +57,70 @@ func (h *Handler) GetBooks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	json.NewEncoder(w).Encode(books)
+}
+
+func (h *Handler) GetBookByID(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid book ID", http.StatusBadRequest)
+		return
+	}
+
+	book, err := h.service.GetBookByID(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "Book not found", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "Failed to retrieve book", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(w).Encode(book)
+}
+
+func (h *Handler) UpdateBook(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid book ID", http.StatusBadRequest)
+		return
+	}
+
+	var request CreateBookRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	book, err := h.service.UpdateBook(r.Context(), id, request)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrInvalidTitle),
+			errors.Is(err, ErrInvalidISBN),
+			errors.Is(err, ErrInvalidTotalCopies):
+			http.Error(w, err.Error(), http.StatusBadRequest)
+
+		case errors.Is(err, sql.ErrNoRows):
+			http.Error(w, "Book not found", http.StatusNotFound)
+
+		default:
+			http.Error(w, "Failed to update book", http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(w).Encode(book)
 }
